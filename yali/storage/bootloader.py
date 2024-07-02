@@ -420,8 +420,16 @@ quit
             # efiDev = self.storage.storageset.bootDevice
             # yali.util.chroot("mkdir /boot/efi")
             # yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+            
+            # 02-07-2024 tarihinde erkan ışık tarafından değiştirildi
+            """
             yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
                 --efi-directory=/boot/efi --bootloader-id=pisilinux \
+                %s" % stage1Devices[0].path)
+            """
+
+            yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
+                --efi-directory=/boot/efi --bootloader-id=boot \
                 %s" % stage1Devices[0].path)
 
             # efi boot sıralaması için dosyayı oku pisilinux u ilk sıraya al
