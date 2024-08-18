@@ -415,39 +415,43 @@ quit
             self.storage,
             self.storage.devicetree.getDeviceByName(self.stage1Device))
 
-    if yali.util.isEfi():
-        print(self.storage.storageset.mountpoints)
-        
-        # Mount the EFI System Partition (ESP)
-        efiDev = self.storage.storageset.bootDevice
-        yali.util.chroot("mkdir -p /boot/efi")
-        yali.util.chroot("mount %s /boot/efi" % efiDev.path)
-        
-        yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
-            --efi-directory=/boot/efi --bootloader-id=pisilinux \
-            %s" % stage1Devices[0].path)
-        
-        # Generate the GRUB configuration file
-        yali.util.chroot("grub2-mkconfig -o /boot/grub2/grub.cfg")
-        
-        # Set Pisilinux as the first boot option
-        set_pisi_boot_order_first()
-        
-    else:
-        yali.util.chroot(
-            #"grub2-install --recheck %s" % stage1Devices[0].path)
-            "grub2-install --force %s" % stage1Devices[0].path)
+        if yali.util.isEfi():
+            print(self.storage.storageset.mountpoints)
+            # efiDev = self.storage.storageset.bootDevice
+            # yali.util.chroot("mkdir /boot/efi")
+            # yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+            
+            # 02-07-2024 tarihinde erkan ışık tarafından değiştirildi
+            """
+            yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
+                --efi-directory=/boot/efi --bootloader-id=pisilinux \
+                %s" % stage1Devices[0].path)
+            """
 
-    if os.path.exists("/usr/bin/mkinitcpio"):
-        kver = os.uname()[2]
-        yali.util.chroot("/usr/bin/mkinitcpio -k {0} \
-            -g /boot/initramfs-{0}-fallback.img -S autodetect".format(kver))
-        yali.util.chroot("/usr/bin/mkinitcpio -k {0}\
-            -c /etc/mkinitcpio.conf -g /boot/initramfs-{0}.img".format(kver))
-    elif os.path.exists("/sbin/mkinitramfs"):
-        yali.util.chroot("/sbin/mkinitramfs --type /etc/kernel/kernel")
+            yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
+                --efi-directory=/boot/efi --bootloader-id=boot \
+                %s" % stage1Devices[0].path)
 
-    yali.postinstall.writeBootLooder()
+            # efi boot sıralaması için dosyayı oku pisilinux u ilk sıraya al
+            set_pisi_boot_order_first()
+            # yali.util.chroot("umount /boot/efi")
+        else:
+            yali.util.chroot(
+                "grub2-install --recheck %s" % stage1Devices[0].path)
+        # kver = path.split("/")[2]
+        # subprocess.call(["/usr/bin/mkinitcpio","-k","%s"% kver ,"-g","/boot/initramfs-%s-fallback.img"% kver,"-S","autodetect"])
+        # subprocess.call(["/usr/bin/mkinitcpio","-k","%s"% kver ,"-c","/etc/mkinitcpio.conf","-g","/boot/initramfs-%s.img"% kver])
+        # kver = platform.release()
+        if os.path.exists("/usr/bin/mkinitcpio"):
+            kver = os.uname()[2]
+            yali.util.chroot("/usr/bin/mkinitcpio -k {0} \
+                -g /boot/initramfs-{0}-fallback.img -S autodetect".format(kver))
+            yali.util.chroot("/usr/bin/mkinitcpio -k {0}\
+                -c /etc/mkinitcpio.conf -g /boot/initramfs-{0}.img".format(kver))
+        elif os.path.exists("/sbin/mkinitramfs"):
+            yali.util.chroot("/sbin/mkinitramfs --type /etc/kernel/kernel")
+
+        yali.postinstall.writeBootLooder()
 
 # FIXME: daha iyi bir sıralama yapılmalı
 # FIXME: subprocess yerine yali.util.run_batch kullanılmalı
@@ -459,12 +463,12 @@ def set_pisi_boot_order_first():
         "efibootmgr", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate()
     if stdout == "":
-        print("efibootmgr output don't read")
+        print("efibootmgr output dont read")
         return
 
-    boot_order = re.search("BootOrder: (.*)", stdout.decode()).groups()[0].split(",")
+    boot_order = re.search("BootOrder: (.*)", stdout).groups()[0].split(",")
 
-    boot_list = re.findall("Boot([0-9]{4})\* (.*)", stdout.decode())
+    boot_list = re.findall("Boot([0-9]{4})\* (.*)", stdout)
 
     pisi_order = ""
     for k, v in boot_list:
