@@ -894,11 +894,6 @@ class EFIFilesystem(FATFilesystem):
     @property
     def supported(self):
         return yali.util.isEfi() and self.utilsAvailable
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Set `_maxSize` for FAT32
-        self._maxSize = 2 * 1024 * 1024  # 2 TB as an example for FAT32
 
 
 register_device_format(EFIFilesystem)
