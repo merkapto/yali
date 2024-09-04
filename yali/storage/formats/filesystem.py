@@ -867,8 +867,8 @@ class FATFilesystem(Filesystem):
     _formattable = True
     _mountOptions = ["umask=0077", "shortname=winnt"]
     # FIXME this should be fat32 in some cases
-    _maxSize = 1024 * 1024
-    partedSystem = fileSystemType["fat16"]
+    _maxSize = 2 *1024 * 1024
+    partedSystem = fileSystemType["fat32"]
 
     def _fsckFailed(self, rc):
         if rc >= 1:
@@ -888,12 +888,17 @@ class EFIFilesystem(FATFilesystem):
     _mountType = "vfat"
     _name = "EFI System Partition"
     _bootable = True
-    _minSize = 50
-    _maxSize = 256
+    _minSize = 350
+    _maxSize = 700
 
     @property
     def supported(self):
         return yali.util.isEfi() and self.utilsAvailable
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set `_maxSize` for FAT32
+        self._maxSize = 2 * 1024 * 1024  # 2 TB as an example for FAT32
 
 
 register_device_format(EFIFilesystem)
