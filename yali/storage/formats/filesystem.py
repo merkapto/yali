@@ -1176,6 +1176,16 @@ class DebugFilesystem(NoDevFilesystem):
 
 register_device_format(DebugFilesystem)
 
+class EfiVarFilesystem(NoDevFilesystem):
+    _type = "efivarfs"
+    _mountOptions = ["efivarfs", "defaults"]
+
+    @property
+    def supported(self):
+        return yali.util.isEfi()
+
+register_device_format(EfiVarFilesystem)
+
 class ProcFilesystem(NoDevFilesystem):
     _type = "proc"
     _defaultMountOptions = ["nosuid", "noexec"]

@@ -199,6 +199,7 @@ class StorageSet(object):
         self.active = False
         self._dev = None
         self._debugfs = None
+        self._efivarfs = None
         self._sysfs = None
         self._proc = None
         self._devshm = None
@@ -238,6 +239,15 @@ class StorageSet(object):
                                  device="debugfs",
                                  mountpoint="/sys/kernel/debug"))
         return self._debugfs
+
+    @property
+    def efivarfs(self):
+        if not self._efivarfs and yali.util.isEfi():
+            self._efivarfs = NoDevice(
+                format=getFormat("efivarfs",
+                                 device="efivarfs",
+                                 mountpoint="/sys/firmware/efi/efivars"))
+        return self._efivarfs
 
     @property
     def proc(self):
@@ -609,6 +619,10 @@ class StorageSet(object):
         devices = sorted(self.mountpoints.values(),
                          key=lambda d: d.format.mountpoint)
         devices += self.swapDevices
+
+        if yali.util.isEfi():
+            devices += self.efivarfs
+
         devices.extend([self.devshm, self.debugfs, self.sysfs, self.proc])
         for device in devices:
             # why the hell do we put swap in the fstab, anyway?
