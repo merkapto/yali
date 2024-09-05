@@ -415,42 +415,44 @@ quit
             self.storage,
             self.storage.devicetree.getDeviceByName(self.stage1Device))
 
-    if yali.util.isEfi():
-        print(self.storage.storageset.mountpoints)
-        
-        #efiDev = self.storage.storageset.bootDevice
-        #yali.util.chroot("mkdir -p /boot/efi")
-        #yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+        if yali.util.isEfi():
+            print(self.storage.storageset.mountpoints)
+            
+            #efiDev = self.storage.storageset.bootDevice
+            #yali.util.chroot("mkdir -p /boot/efi")
+            #yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+    
+            yali.util.chroot("mount -t efivarfs none /sys/firmware/efi/efivars")
+            
+            yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
+                --efi-directory=/boot/efi --bootloader-id=pisilinux \
+                %s" % stage1Devices[0].path)
 
-        yali.util.chroot("mount -t efivarfs none /sys/firmware/efi/efivars")
-        
-        yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
-            --efi-directory=/boot/efi --bootloader-id=pisilinux \
-            %s" % stage1Devices[0].path)
-        
-        # Generate the GRUB configuration file
-        yali.util.chroot("grub2-mkconfig -o /boot/grub2/grub.cfg")
-        
-        # Set Pisilinux as the first boot option
-        set_pisi_boot_order_first()
+            # başka yerde çalıştırılıyor
+            # Generate the GRUB configuration file
+            #yali.util.chroot("grub2-mkconfig -o /boot/grub2/grub.cfg")
+            
+            # Set Pisilinux as the first boot option
+            set_pisi_boot_order_first()
+    
+            yali.util.chroot("umount /sys/firmware/efi/efivars")
+            
+        else:
+            yali.util.chroot(
+                #"grub2-install --recheck %s" % stage1Devices[0].path)
+                "grub2-install --force %s" % stage1Devices[0].path)
+    
+        if os.path.exists("/usr/bin/mkinitcpio"):
+            kver = os.uname()[2]
+            yali.util.chroot("/usr/bin/mkinitcpio -k {0} \
+                -g /boot/initramfs-{0}-fallback.img -S autodetect".format(kver))
+            yali.util.chroot("/usr/bin/mkinitcpio -k {0}\
+                -c /etc/mkinitcpio.conf -g /boot/initramfs-{0}.img".format(kver))
+        elif os.path.exists("/sbin/mkinitramfs"):
+            yali.util.chroot("/sbin/mkinitramfs --type /etc/kernel/kernel")
 
-        yali.util.chroot("umount /sys/firmware/efi/efivars")
-        
-    else:
-        yali.util.chroot(
-            #"grub2-install --recheck %s" % stage1Devices[0].path)
-            "grub2-install --force %s" % stage1Devices[0].path)
-
-    if os.path.exists("/usr/bin/mkinitcpio"):
-        kver = os.uname()[2]
-        yali.util.chroot("/usr/bin/mkinitcpio -k {0} \
-            -g /boot/initramfs-{0}-fallback.img -S autodetect".format(kver))
-        yali.util.chroot("/usr/bin/mkinitcpio -k {0}\
-            -c /etc/mkinitcpio.conf -g /boot/initramfs-{0}.img".format(kver))
-    elif os.path.exists("/sbin/mkinitramfs"):
-        yali.util.chroot("/sbin/mkinitramfs --type /etc/kernel/kernel")
-
-    yali.postinstall.writeBootLooder()
+        # başka yerde çalıştırılıyor
+        #yali.postinstall.writeBootLooder()
 
 # FIXME: daha iyi bir sıralama yapılmalı
 # FIXME: subprocess yerine yali.util.run_batch kullanılmalı
