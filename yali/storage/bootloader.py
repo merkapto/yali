@@ -421,6 +421,8 @@ quit
         #efiDev = self.storage.storageset.bootDevice
         #yali.util.chroot("mkdir -p /boot/efi")
         #yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+
+        yali.util.chroot("mount -t efivars none /sys/firmware/efi/efivars")
         
         yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
             --efi-directory=/boot/efi --bootloader-id=pisilinux \
@@ -431,6 +433,8 @@ quit
         
         # Set Pisilinux as the first boot option
         set_pisi_boot_order_first()
+
+        yali.util.chroot("umount /sys/firmware/efi/efivars")
         
     else:
         yali.util.chroot(
