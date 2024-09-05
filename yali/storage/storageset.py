@@ -621,7 +621,7 @@ class StorageSet(object):
         devices += self.swapDevices
 
         if yali.util.isEfi():
-            devices += self.efivarfs
+            devices.append(self.efivarfs)
 
         devices.extend([self.devshm, self.debugfs, self.sysfs, self.proc])
         for device in devices:
