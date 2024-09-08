@@ -888,8 +888,8 @@ class EFIFilesystem(FATFilesystem):
     _mountType = "vfat"
     _name = "EFI System Partition"
     _bootable = True
-    _minSize = 350
-    _maxSize = 700
+    _minSize = 50
+    _maxSize = 256
 
     @property
     def supported(self):
